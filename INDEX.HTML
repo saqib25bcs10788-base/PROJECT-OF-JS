@@ -5,11 +5,9 @@
   <title>Mini Quote Saver · Atelier Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* =========================
-       DESIGN TOKENS
-       ========================= */
+
     :root {
-      /* Palette – beige / ink aesthetic */
+     
       --bg: #f5efe7;
       --bg-alt: #f9f4ec;
       --card: rgba(255, 255, 255, 0.92);
@@ -419,7 +417,7 @@
       padding-right: 4px;
     }
 
-    /* custom scrollbar */
+    
     .quotes-list::-webkit-scrollbar {
       width: 6px;
     }
@@ -703,7 +701,7 @@
     function addQuote() {
       const value = quoteInput.value.trim();
 
-      // Reset status state
+      
       statusMessage.textContent = "";
       statusMessage.className = "status-message";
 
