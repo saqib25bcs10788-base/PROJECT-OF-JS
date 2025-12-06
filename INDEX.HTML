@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Quote Saver · Atelier Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* =========================
+       DESIGN TOKENS
+       ========================= */
+    :root {
+      /* Palette – beige / ink aesthetic */
+      --bg: #f5efe7;
+      --bg-alt: #f9f4ec;
+      --card: rgba(255, 255, 255, 0.92);
+      --card-border: rgba(15, 23, 42, 0.08);
+
+      --ink: #18181b;
+      --ink-soft: #3f3f46;
+      --ink-muted: #78716c;
+      --ink-subtle: #a1a1aa;
+      --inverse: #f9fafb;
+
+      --primary: #111111;
+      --primary-soft: rgba(24, 24, 27, 0.06);
+      --primary-hover: #000000;
+
+      --accent: #f97316;
+      --accent-soft: rgba(249, 115, 22, 0.09);
+
+      --danger: #e11d48;
+      --danger-soft: rgba(225, 29, 72, 0.07);
+      --danger-hover: #be123c;
+
+      --border-subtle: rgba(148, 163, 184, 0.55);
+      --border-dashed: rgba(148, 163, 184, 0.45);
+
+      --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.22);
+      --shadow-subtle: 0 14px 30px rgba(15, 23, 42, 0.14);
+
+      --radius-card: 24px;
+      --radius-inner: 18px;
+      --radius-chip: 999px;
+
+      --transition-fast: 0.16s ease-out;
+      --transition-med: 0.22s ease-out;
+    }
+
+ 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, #fbbf24 0, transparent 55%),
+        radial-gradient(circle at bottom right, #f97316 0, transparent 55%),
+        linear-gradient(135deg, var(--bg-alt), var(--bg));
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      width: 100%;
+      max-width: 980px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      mix-blend-mode: soft-light;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+    }
+
+    .shell {
+      position: relative;
+    }
+
+    .app-card {
+      position: relative;
+      background: var(--card);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      backdrop-filter: blur(22px);
+    }
+
+    
+    .app-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(15, 23, 42, 0.04),
+          transparent 40%,
+          rgba(249, 115, 22, 0.06)
+        );
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+      padding: 18px 16px 18px;
+    }
+
+    @media (min-width: 720px) {
+      .card-inner {
+        padding: 22px 22px 22px;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .card-inner {
+        padding: 24px 26px 26px;
+      }
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    @media (min-width: 820px) {
+      .grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+        gap: 20px;
+      }
+    }
+
+   
+    .header-block {
+      margin-bottom: 14px;
+    }
+
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: var(--radius-chip);
+      border: 1px solid rgba(24, 24, 27, 0.16);
+      background: rgba(250, 250, 250, 0.8);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .tagline {
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .title {
+      font-size: clamp(1.6rem, 2.3vw, 2rem);
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      max-width: 32rem;
+      line-height: 1.6;
+    }
+
+   
+    .panel {
+      border-radius: var(--radius-inner);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      background: rgba(250, 250, 250, 0.9);
+      box-shadow: var(--shadow-subtle);
+      padding: 14px 14px 14px;
+    }
+
+    @media (min-width: 720px) {
+      .panel {
+        padding: 16px;
+      }
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    .panel-pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-chip);
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      white-space: nowrap;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ink-soft);
+    }
+
+    .input-shell {
+      position: relative;
+    }
+
+    .quote-input {
+      width: 100%;
+      padding: 11px 12px 11px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(248, 250, 252, 0.9);
+      font-size: 0.92rem;
+      color: var(--ink);
+      outline: none;
+      transition:
+        border-color var(--transition-med),
+        box-shadow var(--transition-med),
+        background var(--transition-med),
+        transform var(--transition-fast);
+    }
+
+    .quote-input::placeholder {
+      color: var(--ink-subtle);
+    }
+
+    .quote-input:focus {
+      border-color: var(--accent);
+      background: #fefcf8;
+      box-shadow:
+        0 0 0 1px rgba(249, 115, 22, 0.4),
+        0 0 0 8px rgba(249, 115, 22, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .field-hint {
+      font-size: 0.76rem;
+      color: var(--ink-muted);
+    }
+
+    .actions-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: radial-gradient(circle at top left, #27272a, #09090b);
+      color: var(--inverse);
+      border-radius: var(--radius-chip);
+      padding: 9px 18px;
+      border: 1px solid rgba(24, 24, 27, 0.75);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.45);
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        filter var(--transition-fast),
+        background-position 0.22s ease-out,
+        border-color var(--transition-fast);
+      background-size: 140% 140%;
+      background-position: 0% 0%;
+    }
+
+    .btn-primary span.icon {
+      font-size: 1.05rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 24px 42px rgba(15, 23, 42, 0.55);
+      filter: brightness(1.02);
+      background-position: 70% 30%;
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.55);
+      filter: brightness(0.99);
+    }
+
+    .btn-primary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .status-message {
+      font-size: 0.77rem;
+      min-height: 1.2em;
+      color: var(--ink-muted);
+    }
+
+    .status-error {
+      color: var(--danger);
+    }
+
+    .status-success {
+      color: #15803d;
+    }
+
+   
+    .quotes-panel {
+      border-radius: var(--radius-inner);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      background: rgba(250, 250, 250, 0.85);
+      box-shadow: var(--shadow-subtle);
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    @media (min-width: 720px) {
+      .quotes-panel {
+        padding: 16px;
+      }
+    }
+
+    .quotes-header-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .quotes-title {
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    .quotes-count {
+      font-size: 0.8rem;
+      color: var(--ink-subtle);
+    }
+
+    .quotes-shell {
+      border-radius: 16px;
+      border: 1px dashed var(--border-dashed);
+      background: rgba(250, 250, 250, 0.9);
+      padding: 8px 8px 6px;
+      flex: 1;
+      min-height: 120px;
+    }
+
+    .quotes-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* custom scrollbar */
+    .quotes-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .quotes-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .quotes-list::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.9);
+      border-radius: 999px;
+    }
+
+    .quote-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: #fdfcf8;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast),
+        background var(--transition-fast);
+    }
+
+    .quote-item:hover {
+      transform: translateY(-1px);
+      border-color: rgba(249, 115, 22, 0.7);
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.2);
+      background: #fffbf2;
+    }
+
+    .quote-text {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      word-break: break-word;
+    }
+
+    .quote-meta {
+      font-size: 0.72rem;
+      color: var(--ink-subtle);
+      margin-top: 4px;
+    }
+
+    .quote-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .btn-delete {
+      background: var(--danger-soft);
+      border-radius: var(--radius-chip);
+      border: 1px solid rgba(225, 29, 72, 0.4);
+      font-size: 0.76rem;
+      padding: 3px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--danger);
+      cursor: pointer;
+      transition:
+        background var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-delete span.icon {
+      font-size: 0.86rem;
+    }
+
+    .btn-delete:hover {
+      background: var(--danger);
+      color: var(--inverse);
+      transform: translateY(-0.5px);
+      box-shadow: 0 12px 28px rgba(190, 24, 93, 0.4);
+      border-color: transparent;
+    }
+
+    .btn-delete:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 18px rgba(190, 24, 93, 0.35);
+    }
+
+    .empty-state {
+      font-size: 0.8rem;
+      color: var(--ink-subtle);
+      padding: 6px 4px 2px;
+    }
+
+ 
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="app-card" aria-label="Mini Quote Saver app">
+      <div class="card-inner">
+        <div class="header-block">
+          <div class="badge-row">
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span>Mini Quote Saver</span>
+            </div>
+            <span class="tagline">Local · Client side · JSON</span>
+          </div>
+          <h1 class="title">Collect the lines that stick with you.</h1>
+          <p class="subtitle">
+            A tiny, offline-first quote notebook that lives in your browser.
+            No accounts, no sync — just your words, stored with
+            <code>localStorage</code>.
+          </p>
+        </div>
+
+        <div class="grid">
+          
+          <section class="panel" aria-label="Add a new quote">
+            <div class="panel-heading">
+              <div class="panel-title">New entry</div>
+              <div class="panel-pill">Press Enter to save</div>
+            </div>
+
+            <form class="quote-form" id="quoteForm">
+              <div class="form-group">
+                <label for="quoteInput" class="field-label">Quote text</label>
+                <div class="input-shell">
+                  <input
+                    type="text"
+                    id="quoteInput"
+                    class="quote-input"
+                    placeholder="Type a line you don't want to forget..."
+                    aria-label="Quote text"
+                  />
+                </div>
+                <p class="field-hint">
+                  Keep it short and precise. Empty quotes are ignored.
+                </p>
+              </div>
+
+              <div class="actions-row">
+                <button type="submit" class="btn-primary" id="addQuoteButton">
+                  <span class="icon">✶</span>
+                  <span>Add quote</span>
+                </button>
+                <span class="status-message" id="statusMessage"></span>
+              </div>
+            </form>
+          </section>
+
+        
+          <section class="quotes-panel" aria-label="Saved quotes">
+            <div class="quotes-header-row">
+              <div class="quotes-title">Saved quotes</div>
+              <div class="quotes-count" id="quotesCount">0 saved</div>
+            </div>
+
+            <div class="quotes-shell">
+              <ul class="quotes-list" id="quoteList"></ul>
+              <p class="empty-state" id="emptyState">
+                No quotes yet. Add your first one on the left.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    
+
+    const STORAGE_KEY = "miniQuoteSaverQuotes";
+
+    
+    const quotes = [];
+
+
+    const quoteForm = document.getElementById("quoteForm");
+    const quoteInput = document.getElementById("quoteInput");
+    const statusMessage = document.getElementById("statusMessage");
+    const quoteList = document.getElementById("quoteList");
+    const emptyState = document.getElementById("emptyState");
+    const quotesCount = document.getElementById("quotesCount");
+
+    
+    function saveQuotes() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
+    }
+
+    
+    function loadQuotes() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        renderQuotes();
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          quotes.length = 0;
+          parsed.forEach((q) => quotes.push(q));
+        }
+      } catch (err) {
+        console.error("Failed to parse stored quotes:", err);
+      }
+
+      renderQuotes();
+    }
+
+    
+    function renderQuotes() {
+     
+      while (quoteList.firstChild) {
+        quoteList.removeChild(quoteList.firstChild);
+      }
+
+      
+      quotesCount.textContent =
+        quotes.length === 0
+          ? "0 saved"
+          : quotes.length === 1
+          ? "1 saved"
+          : `${quotes.length} saved`;
+
+      emptyState.style.display = quotes.length === 0 ? "block" : "none";
+
+  
+      quotes.forEach((quote, index) => {
+        const li = document.createElement("li");
+        li.className = "quote-item";
+
+        const textBlock = document.createElement("div");
+        const span = document.createElement("div");
+        span.className = "quote-text";
+        span.textContent = quote;
+
+        const meta = document.createElement("div");
+        meta.className = "quote-meta";
+        meta.textContent = `Quote #${index + 1}`;
+
+        textBlock.appendChild(span);
+        textBlock.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "quote-actions";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "btn-delete";
+        deleteBtn.innerHTML =
+          '<span class="icon">✕</span><span>Remove</span>';
+
+        deleteBtn.addEventListener("click", () => {
+          deleteQuote(index);
+        });
+
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(textBlock);
+        li.appendChild(actions);
+        quoteList.appendChild(li);
+      });
+    }
+
+    
+    function addQuote() {
+      const value = quoteInput.value.trim();
+
+      // Reset status state
+      statusMessage.textContent = "";
+      statusMessage.className = "status-message";
+
+      if (!value) {
+        statusMessage.textContent = "Please type a quote before adding.";
+        statusMessage.classList.add("status-error");
+        return;
+      }
+
+      quotes.push(value);
+      saveQuotes();
+      renderQuotes();
+
+      quoteInput.value = "";
+      statusMessage.textContent = "Quote added.";
+      statusMessage.classList.add("status-success");
+    }
+
+   
+    function deleteQuote(index) {
+      quotes.splice(index, 1);
+      saveQuotes();
+      renderQuotes();
+
+      statusMessage.textContent = "Quote removed.";
+      statusMessage.className = "status-message status-success";
+    }
+
+  
+    quoteForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      addQuote();
+    });
+
+   
+    loadQuotes();
+  </script>
+</body>
+</html>
+
